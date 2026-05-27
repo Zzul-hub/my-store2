@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StyleStore</title>
+  <title>Artists.proof#225</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
     body{background:#f8f9fa;color:#212529}
     .header{background:white;padding:1rem 2rem;box-shadow:0 2px 10px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
-    .logo{font-size:1.8rem;font-weight:700;color:#2c3e50;cursor:pointer}.logo span{color:#e74c3c}
+    .logo{font-size:1.8rem;font-weight:700;color:#2c3e50;cursor:pointer}
     .cart-icon{background:#e74c3c;color:white;border:none;padding:0.5rem 1.2rem;border-radius:30px;font-weight:600;cursor:pointer;font-size:0.9rem}
     .cart-count{background:white;color:#e74c3c;border-radius:50%;padding:0.1rem 0.4rem;font-size:0.75rem;margin-left:0.3rem;font-weight:700}
     .tabs{display:flex;flex-wrap:wrap;gap:0.5rem;padding:1.5rem 2rem 0.5rem;justify-content:center}
@@ -56,7 +56,7 @@
 </head>
 <body>
   <header class="header">
-    <div class="logo" id="shopLogo">Style<span>Store</span></div>
+    <div class="logo" id="shopLogo">Artists.proof#225</div>
     <button class="cart-icon" id="cartBtn">🛒 Кошик <span class="cart-count" id="cartCount">0</span></button>
   </header>
 
@@ -104,12 +104,24 @@
     let isAdminLoggedIn = false;
     let editingProductId = null;
 
+    // Название магазина зашито в коде
+    const SHOP_NAME = "Artists.proof#225";
+    document.getElementById('shopLogo').textContent = SHOP_NAME;
+    document.getElementById('pageTitle').textContent = SHOP_NAME;
+
     const ADMIN = JSON.parse(localStorage.getItem('admin') || '{"login":"admin","password":"admin123"}');
 
     async function loadProducts() {
       try {
         const r = await fetch(API_URL);
-        products = await r.json();
+        const data = await r.json();
+        if (Array.isArray(data)) {
+          products = data;
+        } else if (data.products) {
+          products = data.products;
+        } else {
+          products = [];
+        }
       } catch(e) {
         products = [];
       }
@@ -131,7 +143,7 @@
         await fetch(API_URL, {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(products)
+          body: JSON.stringify({ products })
         });
       } catch(e) {}
     }
@@ -163,7 +175,6 @@
     }
 
     function showProductsView() {
-      currentView='products';
       hideAll();
       document.getElementById('productsContainer').style.display='';
       document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -260,7 +271,7 @@
       const city=document.getElementById('customerCity').value.trim();
       const np=document.getElementById('customerNovaPoshta').value.trim();
       if(!name||!phone){alert('Заповніть ім\'я та телефон');return}
-      let text=`🛒 <b>Нове замовлення</b>\n\n👤 <b>Ім'я:</b> ${name}\n📞 <b>Телефон:</b> ${phone}\n🏙 <b>Місто:</b> ${city||'-'}\n📦 <b>НП:</b> ${np||'-'}\n\n📦 <b>Товари:</b>\n`;
+      let text=`🛒 <b>Нове замовлення</b> з ${SHOP_NAME}\n\n👤 <b>Ім'я:</b> ${name}\n📞 <b>Телефон:</b> ${phone}\n🏙 <b>Місто:</b> ${city||'-'}\n📦 <b>НП:</b> ${np||'-'}\n\n📦 <b>Товари:</b>\n`;
       cart.forEach(i=>{text+=`- ${i.name} x${i.qty} = ${i.price.toLocaleString('uk-UA')} ₴\n`});
       const tu=cart.reduce((s,i)=>s+i.price*i.qty,0);
       text+=`\n💰 <b>Разом:</b> ${tu.toLocaleString('uk-UA')} ₴ (~${(tu/usdRate).toFixed(0)} $)`;
@@ -305,6 +316,8 @@
       const ep=isEdit?products.find(p=>p.id===editingProductId):null;
       adminContent.innerHTML=`
         <h2>📦 Управління</h2>
+        <p>Назва магазину: <strong>${SHOP_NAME}</strong></p>
+        <div class="divider"></div>
         <div class="form-group"><label>Новий логін</label><input type="text" id="nl"></div>
         <div class="form-group"><label>Новий пароль</label><input type="password" id="np"></div>
         <button class="btn btn-save" id="saveCreds">💾 Зберегти доступ</button>
