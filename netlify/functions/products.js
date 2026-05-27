@@ -1,5 +1,3 @@
-const { getStore } = require('@netlify/blobs');
-
 exports.handler = async function(event, context) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -11,7 +9,8 @@ exports.handler = async function(event, context) {
     return { statusCode: 200, headers, body: '' };
   }
 
-  const store = getStore('my-store-data');
+  // Используем встроенное Blobs-хранилище через context
+  const store = context.blobs.getStore('my-store-data');
 
   if (event.httpMethod === 'GET') {
     try {
