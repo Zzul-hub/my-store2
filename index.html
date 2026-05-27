@@ -5,14 +5,374 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StyleStore</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-    body{background:#f8f9fa;color:#212529;text-align:center;padding:4rem}
-    h1{font-size:3rem;color:#2c3e50}
-    p{font-size:1.5rem;color:#6c757d;margin-top:1rem}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+    body{background:#f8f9fa;color:#212529}
+    .header{background:white;padding:1rem 2rem;box-shadow:0 2px 10px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
+    .logo{font-size:1.8rem;font-weight:700;color:#2c3e50;cursor:pointer}.logo span{color:#e74c3c}
+    .cart-icon{background:#e74c3c;color:white;border:none;padding:0.5rem 1.2rem;border-radius:30px;font-weight:600;cursor:pointer;font-size:0.9rem}
+    .cart-count{background:white;color:#e74c3c;border-radius:50%;padding:0.1rem 0.4rem;font-size:0.75rem;margin-left:0.3rem;font-weight:700}
+    .tabs{display:flex;flex-wrap:wrap;gap:0.5rem;padding:1.5rem 2rem 0.5rem;justify-content:center}
+    .tab{background:white;border:1px solid #dee2e6;padding:0.6rem 1.5rem;border-radius:30px;font-weight:500;cursor:pointer;font-size:0.95rem}
+    .tab.active{background:#2c3e50;color:white;border-color:#2c3e50}
+    .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1.8rem;padding:2rem;max-width:1400px;margin:0 auto}
+    .product-card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,0.05);cursor:pointer;transition:transform 0.2s;display:flex;flex-direction:column}
+    .product-card:hover{transform:translateY(-5px)}
+    .product-image{width:100%;height:280px;object-fit:cover;background:#f1f3f5}
+    .product-info{padding:1.2rem;display:flex;flex-direction:column;gap:0.4rem;flex:1}
+    .product-category{font-size:0.7rem;text-transform:uppercase;color:#e74c3c;font-weight:600}
+    .product-name{font-weight:600;font-size:1.1rem}
+    .product-price{font-weight:700;font-size:1.3rem;color:#2c3e50;margin-top:0.3rem}
+    .product-price-usd{font-size:0.85rem;color:#6c757d}
+    .add-to-cart-btn{background:#2c3e50;color:white;border:none;padding:0.6rem;border-radius:10px;cursor:pointer;font-weight:600;margin-top:0.5rem;width:100%}
+    .no-items{text-align:center;grid-column:1/-1;padding:4rem;color:#6c757d}
+    .cart-container{display:none;padding:2rem;max-width:800px;margin:0 auto}
+    .cart-container.open{display:block}
+    .cart-item{display:flex;align-items:center;gap:1rem;background:white;padding:1rem;border-radius:15px;margin-bottom:1rem}
+    .cart-item-img{width:80px;height:80px;object-fit:cover;border-radius:10px}
+    .cart-item-info{flex:1}.cart-item-name{font-weight:600}
+    .qty-control{display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem}
+    .qty-btn{background:#f1f3f5;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-weight:700}
+    .remove-btn{background:none;border:none;color:#e74c3c;cursor:pointer;font-size:1.2rem}
+    .cart-total{text-align:right;font-size:1.4rem;font-weight:700;margin:1rem 0}
+    .checkout-form{background:white;padding:2rem;border-radius:20px}
+    .checkout-form input{width:100%;padding:0.8rem;margin-bottom:0.8rem;border:1px solid #dee2e6;border-radius:12px;font-size:0.95rem}
+    .checkout-btn{width:100%;padding:1rem;background:#27ae60;color:white;border:none;border-radius:15px;font-weight:700;font-size:1.1rem;cursor:pointer}
+    .success-msg{color:#27ae60;text-align:center;margin-top:1rem;display:none}
+    .success-msg.show{display:block}
+    .admin-panel{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;justify-content:center;align-items:center}
+    .admin-panel.open{display:flex}
+    .admin-box{background:white;border-radius:24px;padding:2rem;width:95%;max-width:600px;max-height:90vh;overflow-y:auto}
+    .form-group{margin-bottom:1rem}.form-group label{display:block;font-weight:500;margin-bottom:0.3rem}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.7rem;border:1px solid #dee2e6;border-radius:12px;font-size:0.95rem}
+    .btn{padding:0.7rem 1.5rem;border-radius:30px;border:none;font-weight:600;cursor:pointer;background:#2c3e50;color:white;margin-right:0.5rem;margin-bottom:0.3rem}
+    .btn-outline{background:transparent;border:1px solid #2c3e50;color:#2c3e50}
+    .btn-save{background:#27ae60}
+    .btn-edit{background:#f39c12;color:white;border:none;padding:0.3rem 0.8rem;border-radius:20px;cursor:pointer;margin-right:0.3rem}
+    .delete-btn{background:#e74c3c;color:white;border:none;padding:0.3rem 0.8rem;border-radius:20px;cursor:pointer}
+    .admin-item{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid #eee}
+    .divider{border-top:1px solid #eee;margin:1.2rem 0}
+    @media(max-width:768px){.products-grid{padding:1rem;gap:1rem}.header{padding:0.8rem 1rem}}
   </style>
 </head>
 <body>
-  <h1>🛍️ StyleStore</h1>
-  <p>Сайт працює!</p>
+  <header class="header">
+    <div class="logo" id="shopLogo">Style<span>Store</span></div>
+    <button class="cart-icon" id="cartBtn">🛒 Кошик <span class="cart-count" id="cartCount">0</span></button>
+  </header>
+
+  <div class="tabs" id="tabsContainer">
+    <button class="tab active" data-category="all">Все</button>
+    <button class="tab" data-category="pants">Штани</button>
+    <button class="tab" data-category="sweaters">Кофти</button>
+    <button class="tab" data-category="tshirts">Футболки</button>
+    <button class="tab" data-category="dresses">Сукні</button>
+    <button class="tab" data-category="suits">Костюми</button>
+  </div>
+
+  <div class="products-grid" id="productsContainer"></div>
+  <div class="cart-container" id="cartContainer">
+    <h2>🛒 Ваш кошик</h2>
+    <div id="cartItems"></div>
+    <div class="cart-total" id="cartTotal"></div>
+    <div class="checkout-form" id="checkoutForm" style="display:none;">
+      <h3>📝 Оформлення замовлення</h3>
+      <input type="text" id="customerName" placeholder="Ваше ім'я та прізвище">
+      <input type="tel" id="customerPhone" placeholder="Номер телефону">
+      <input type="text" id="customerCity" placeholder="Місто">
+      <input type="text" id="customerNovaPoshta" placeholder="Номер відділення Нової Пошти">
+      <button class="checkout-btn" id="submitOrder">📦 Оформити</button>
+      <div class="success-msg" id="successMsg">✅ Відправлено!</div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-box" id="adminContent"></div>
+  </div>
+
+  <script>
+    const TOKEN = "8990569855:AAGFLxCYiE4h1nQHBVs0Ctbl2u0I-uC4-Dw";
+    const CHAT_ID = "1004246156";
+    const API_URL = '/.netlify/functions/products';
+
+    const categoryKeys = ['pants','sweaters','tshirts','dresses','suits'];
+    const categoryNames = {pants:'Штани',sweaters:'Кофти',tshirts:'Футболки',dresses:'Сукні',suits:'Костюми'};
+
+    let usdRate = 41.5;
+    let products = [];
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    let currentCategory = 'all';
+    let isAdminLoggedIn = false;
+    let editingProductId = null;
+
+    const ADMIN = JSON.parse(localStorage.getItem('admin') || '{"login":"admin","password":"admin123"}');
+
+    async function loadProducts() {
+      try {
+        const r = await fetch(API_URL);
+        products = await r.json();
+      } catch(e) {
+        products = [];
+      }
+      if (products.length === 0) {
+        products = [
+          {id:'1',name:'Класичні штани',category:'pants',price:1200,images:['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&h=600&fit=crop'],description:''},
+          {id:'2',name:'В\'язана кофта',category:'sweaters',price:950,images:['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=600&fit=crop'],description:''},
+          {id:'3',name:'Бавовняна футболка',category:'tshirts',price:450,images:['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop'],description:''},
+          {id:'4',name:'Літня сукня',category:'dresses',price:1350,images:['https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=600&fit=crop'],description:''},
+          {id:'5',name:'Діловий костюм',category:'suits',price:4500,images:['https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=600&h=600&fit=crop'],description:''}
+        ];
+        await saveProducts();
+      }
+      showProductsView();
+    }
+
+    async function saveProducts() {
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(products)
+        });
+      } catch(e) {}
+    }
+
+    async function fetchUsdRate() {
+      try {
+        const r = await fetch('https://api.exchangerate-api.com/v4/latest/UAH');
+        const d = await r.json();
+        if(d&&d.rates&&d.rates.USD) usdRate = 1/d.rates.USD;
+      } catch(e) {}
+    }
+
+    function formatPrice(uah) {
+      return `${uah.toLocaleString('uk-UA')} ₴ <span class="product-price-usd">(~${(uah/usdRate).toFixed(0)} $)</span>`;
+    }
+
+    function getMainImage(p) {
+      return (p.images&&p.images[0])||'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&h=600&fit=crop';
+    }
+
+    function updateCartCount() {
+      document.getElementById('cartCount').textContent = cart.reduce((s,i)=>s+i.qty,0);
+    }
+
+    function hideAll() {
+      document.getElementById('productsContainer').style.display='none';
+      document.getElementById('cartContainer').classList.remove('open');
+      document.getElementById('cartContainer').style.display='none';
+    }
+
+    function showProductsView() {
+      currentView='products';
+      hideAll();
+      document.getElementById('productsContainer').style.display='';
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      const at = document.querySelector(`.tab[data-category="${currentCategory}"]`);
+      if(at) at.classList.add('active');
+      const filtered = currentCategory==='all'?products:products.filter(p=>p.category===currentCategory);
+      const c = document.getElementById('productsContainer');
+      if(!filtered.length){c.innerHTML='<div class="no-items">Немає товарів</div>';return}
+      c.innerHTML = filtered.map(p=>`
+        <div class="product-card" data-id="${p.id}">
+          <img src="${getMainImage(p)}" class="product-image" onerror="this.style.background='#f1f3f5'">
+          <div class="product-info">
+            <div class="product-category">${categoryNames[p.category]||p.category}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-price">${formatPrice(p.price)}</div>
+            <button class="add-to-cart-btn quick-add" data-id="${p.id}">У кошик</button>
+          </div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.quick-add').forEach(b=>b.addEventListener('click',function(e){
+        e.stopPropagation();
+        const p=products.find(x=>x.id===this.dataset.id);
+        if(!p)return;
+        const ex=cart.find(i=>i.id===p.id);
+        if(ex)ex.qty++;else cart.push({id:p.id,name:p.name,price:p.price,image:getMainImage(p),qty:1});
+        localStorage.setItem('cart',JSON.stringify(cart));
+        updateCartCount();
+        this.textContent='✅';setTimeout(()=>{this.textContent='У кошик'},800);
+      }));
+    }
+
+    function showCartView() {
+      hideAll();
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById('cartContainer').classList.add('open');
+      document.getElementById('cartContainer').style.display='block';
+      renderCart();
+    }
+
+    function renderCart() {
+      const items=document.getElementById('cartItems');
+      const total=document.getElementById('cartTotal');
+      const form=document.getElementById('checkoutForm');
+      document.getElementById('successMsg').classList.remove('show');
+      if(!cart.length){
+        items.innerHTML='<p style="text-align:center;padding:2rem;">Кошик порожній</p>';
+        total.innerHTML='';form.style.display='none';
+      }else{
+        items.innerHTML=cart.map(i=>`
+          <div class="cart-item">
+            <img src="${i.image}" class="cart-item-img" onerror="this.style.background='#f1f3f5'">
+            <div class="cart-item-info">
+              <div class="cart-item-name">${i.name}</div>
+              <div class="qty-control">
+                <button class="qty-btn minus" data-id="${i.id}">−</button><span>${i.qty}</span><button class="qty-btn plus" data-id="${i.id}">+</button>
+              </div>
+            </div>
+            <button class="remove-btn" data-id="${i.id}">✕</button>
+          </div>
+        `).join('');
+        const tu=cart.reduce((s,i)=>s+i.price*i.qty,0);
+        total.innerHTML=`<strong>Разом:</strong> ${formatPrice(tu)}`;
+        form.style.display='block';
+      }
+      document.querySelectorAll('.qty-btn.minus').forEach(b=>b.addEventListener('click',function(){
+        const i=cart.find(x=>x.id===this.dataset.id);
+        if(i&&i.qty>1)i.qty--;else cart=cart.filter(x=>x.id!==this.dataset.id);
+        localStorage.setItem('cart',JSON.stringify(cart));updateCartCount();renderCart();
+      }));
+      document.querySelectorAll('.qty-btn.plus').forEach(b=>b.addEventListener('click',function(){
+        const i=cart.find(x=>x.id===this.dataset.id);
+        if(i)i.qty++;
+        localStorage.setItem('cart',JSON.stringify(cart));updateCartCount();renderCart();
+      }));
+      document.querySelectorAll('.remove-btn').forEach(b=>b.addEventListener('click',function(){
+        cart=cart.filter(x=>x.id!==this.dataset.id);
+        localStorage.setItem('cart',JSON.stringify(cart));updateCartCount();renderCart();
+      }));
+    }
+
+    async function sendToTelegram(text) {
+      try {
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({chat_id:CHAT_ID,text:text,parse_mode:'HTML'})
+        });
+      } catch(e) {}
+    }
+
+    document.getElementById('submitOrder').addEventListener('click',async function(){
+      const name=document.getElementById('customerName').value.trim();
+      const phone=document.getElementById('customerPhone').value.trim();
+      const city=document.getElementById('customerCity').value.trim();
+      const np=document.getElementById('customerNovaPoshta').value.trim();
+      if(!name||!phone){alert('Заповніть ім\'я та телефон');return}
+      let text=`🛒 <b>Нове замовлення</b>\n\n👤 <b>Ім'я:</b> ${name}\n📞 <b>Телефон:</b> ${phone}\n🏙 <b>Місто:</b> ${city||'-'}\n📦 <b>НП:</b> ${np||'-'}\n\n📦 <b>Товари:</b>\n`;
+      cart.forEach(i=>{text+=`- ${i.name} x${i.qty} = ${i.price.toLocaleString('uk-UA')} ₴\n`});
+      const tu=cart.reduce((s,i)=>s+i.price*i.qty,0);
+      text+=`\n💰 <b>Разом:</b> ${tu.toLocaleString('uk-UA')} ₴ (~${(tu/usdRate).toFixed(0)} $)`;
+      await sendToTelegram(text);
+      document.getElementById('successMsg').classList.add('show');
+      cart=[];localStorage.setItem('cart','[]');updateCartCount();
+      document.getElementById('customerName').value='';
+      document.getElementById('customerPhone').value='';
+      document.getElementById('customerCity').value='';
+      document.getElementById('customerNovaPoshta').value='';
+      setTimeout(()=>{document.getElementById('successMsg').classList.remove('show');renderCart()},3000);
+    });
+
+    document.getElementById('cartBtn').addEventListener('click',showCartView);
+    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){currentCategory=this.dataset.category;showProductsView()}));
+
+    // Админка
+    const adminPanel=document.getElementById('adminPanel');
+    const adminContent=document.getElementById('adminContent');
+
+    function closeAdmin(){adminPanel.classList.remove('open');isAdminLoggedIn=false;editingProductId=null;history.replaceState(null,'',location.pathname)}
+
+    function showLogin(){
+      adminContent.innerHTML=`
+        <h2>🔐 Вхід</h2>
+        <div class="form-group"><input type="text" id="li" placeholder="Логін"></div>
+        <div class="form-group"><input type="password" id="pi" placeholder="Пароль"></div>
+        <button class="btn" id="loginBtn">Увійти</button>
+        <button class="btn btn-outline" id="closeBtn">Закрити</button>
+      `;
+      document.getElementById('loginBtn').addEventListener('click',()=>{
+        if(document.getElementById('li').value===ADMIN.login&&document.getElementById('pi').value===ADMIN.password){
+          isAdminLoggedIn=true;showDashboard();
+        }else alert('Невірно');
+      });
+      document.getElementById('closeBtn').addEventListener('click',closeAdmin);
+    }
+
+    function showDashboard(){
+      const catOpts=categoryKeys.map(c=>`<option value="${c}">${categoryNames[c]}</option>`).join('');
+      const isEdit=editingProductId!==null;
+      const ep=isEdit?products.find(p=>p.id===editingProductId):null;
+      adminContent.innerHTML=`
+        <h2>📦 Управління</h2>
+        <div class="form-group"><label>Новий логін</label><input type="text" id="nl"></div>
+        <div class="form-group"><label>Новий пароль</label><input type="password" id="np"></div>
+        <button class="btn btn-save" id="saveCreds">💾 Зберегти доступ</button>
+        <div class="divider"></div>
+        <h3>${isEdit?'✏️ Редагування':'➕ Додати'}</h3>
+        <div class="form-group"><label>Назва</label><input type="text" id="pn" value="${isEdit?ep.name:''}"></div>
+        <div class="form-group"><label>Категорія</label><select id="pc">${catOpts}</select></div>
+        <div class="form-group"><label>Ціна (₴)</label><input type="number" id="pp" value="${isEdit?ep.price:''}"></div>
+        <div class="form-group"><label>URL фото</label><input type="text" id="pi" value="${isEdit?ep.images.join(', '):''}"></div>
+        <div class="form-group"><label>Опис</label><textarea id="pd">${isEdit?ep.description:''}</textarea></div>
+        <button class="btn" id="saveProd">${isEdit?'Оновити':'Додати'}</button>
+        ${isEdit?'<button class="btn btn-outline" id="cancelEdit">Скасувати</button>':''}
+        <button class="btn btn-outline" id="logout">Вийти</button>
+        <div class="admin-product-list" id="adminList"></div>
+      `;
+      if(isEdit)document.getElementById('pc').value=ep.category;
+      renderAdminList();
+      document.getElementById('saveCreds').addEventListener('click',()=>{
+        const nl=document.getElementById('nl').value.trim();
+        const np=document.getElementById('np').value.trim();
+        if(!nl||!np){alert('Заповніть');return}
+        ADMIN.login=nl;ADMIN.password=np;
+        localStorage.setItem('admin',JSON.stringify(ADMIN));
+        alert('✅ Збережено');
+      });
+      document.getElementById('saveProd').addEventListener('click',async()=>{
+        const name=document.getElementById('pn').value.trim();
+        const cat=document.getElementById('pc').value;
+        const price=+document.getElementById('pp').value;
+        const imgs=document.getElementById('pi').value.trim();
+        const desc=document.getElementById('pd').value.trim();
+        if(!name||!price){alert('Заповніть');return}
+        const images=imgs?imgs.split(',').map(s=>s.trim()).filter(s=>s).slice(0,5):['https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&h=600&fit=crop'];
+        if(isEdit){const idx=products.findIndex(p=>p.id===editingProductId);if(idx!==-1)products[idx]={...products[idx],name,category:cat,price,images,description:desc};editingProductId=null}
+        else products.push({id:Date.now().toString(),name,category:cat,price,images,description:desc});
+        await saveProducts();
+        showProductsView();
+        showDashboard();
+      });
+      if(isEdit)document.getElementById('cancelEdit').addEventListener('click',()=>{editingProductId=null;showDashboard()});
+      document.getElementById('logout').addEventListener('click',()=>{isAdminLoggedIn=false;editingProductId=null;showLogin()});
+    }
+
+    function renderAdminList(){
+      const lc=document.getElementById('adminList');
+      if(!lc)return;
+      lc.innerHTML=products.map(p=>`
+        <div class="admin-item">
+          <div><strong>${p.name}</strong> [${categoryNames[p.category]}] - ${p.price} ₴</div>
+          <div>
+            <button class="btn-edit" data-id="${p.id}">✏️</button>
+            <button class="delete-btn" data-id="${p.id}">🗑</button>
+          </div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.btn-edit').forEach(b=>b.addEventListener('click',function(){editingProductId=this.dataset.id;showDashboard()}));
+      document.querySelectorAll('.delete-btn').forEach(b=>b.addEventListener('click',async function(){if(confirm('Видалити?')){products=products.filter(p=>p.id!==this.dataset.id);await saveProducts();showProductsView();showDashboard()}}));
+    }
+
+    adminPanel.addEventListener('click',function(e){if(e.target===adminPanel)closeAdmin()});
+    if(location.hash==='#admin'){adminPanel.classList.add('open');showLogin()}
+    window.addEventListener('hashchange',()=>{if(location.hash==='#admin'){adminPanel.classList.add('open');showLogin()}});
+
+    document.getElementById('shopLogo').addEventListener('click',()=>{currentCategory='all';showProductsView()});
+
+    updateCartCount();
+    fetchUsdRate();
+    loadProducts();
+  </script>
 </body>
 </html>
